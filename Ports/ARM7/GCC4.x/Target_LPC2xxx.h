@@ -53,9 +53,7 @@
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1 && !defined(GCC_IRQ_PATCH_REQUIRED)
 #define OS_INTERRUPT   __attribute__((interrupt("IRQ")))
 #else
-// TODO  original no have interrupt attribute
 #define OS_INTERRUPT
-//#define OS_INTERRUPT   __attribute__((interrupt("IRQ")))
 #endif
 
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1

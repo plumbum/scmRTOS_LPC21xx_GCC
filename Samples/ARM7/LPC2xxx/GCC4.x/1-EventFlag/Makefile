@@ -215,7 +215,7 @@ $(LPC21ISP):
 load: $(HEX) $(LPC21ISP)
 	@echo
 	@echo Upload firmware
-	$(LPC21ISP) -term $(LPC21ISP_CONTROL) $(LPC21ISP_DEBUG) $< $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
+	$(LPC21ISP) $(LPC21ISP_CONTROL) $(LPC21ISP_DEBUG) $< $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
 
 tags:
 	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q . ../../../../../Common ../../../../../Ports

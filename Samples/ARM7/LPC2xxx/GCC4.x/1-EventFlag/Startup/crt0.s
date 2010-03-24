@@ -1,5 +1,3 @@
-#include "device.h"
-
         .global main                    // int main(void)
         .global sysInit
 
@@ -29,6 +27,9 @@
         .equ  I_BIT, 0x80               // when I bit is set, IRQ is disabled
         .equ  F_BIT, 0x40               // when F bit is set, FIQ is disabled
 
+
+#include <OS_Target_core.h>
+#include <scmRTOS_CONFIG.h>
 
 #define VAL_PLLCFG_MSEL  ((PLL_MUL - 1) << 0)
 #if (PLL_DIV == 1)
@@ -73,7 +74,11 @@ Vectors:
         ldr   pc,_pabt                  // program abort - _pabt
         ldr   pc,_dabt                  // data abort - _dabt
         nop                             // reserved
+#if (scmRTOS_CONTEXT_SWITCH_SCHEME == 0) || defined(GCC_IRQ_PATCH_REQUIRED)
+        ldr   pc, _irq         /* IRQ interrupt         */
+#else
         ldr   pc,[pc,#-0xFF0]           // IRQ - read the VIC
+#endif
         ldr   pc,_fiq                   // FIQ - _fiq
 
 #if 0
@@ -82,7 +87,13 @@ _undf:  .word _reset                    // undefined - _reset
 _swi:   .word _reset                    // SWI - _reset
 _pabt:  .word _reset                    // program abort - _reset
 _dabt:  .word _reset                    // data abort - _reset
+
+#if (scmRTOS_CONTEXT_SWITCH_SCHEME == 0) || defined(GCC_IRQ_PATCH_REQUIRED)
+_irq:   .word IRQHandler
+#else
 _irq:   .word _reset                    // IRQ - _reset
+#endif
+
 _fiq:   .word _reset                    // FIQ - _reset
 
 #else
@@ -91,7 +102,13 @@ _undf:  .word __undf                    // undefined
 _swi:   .word __swi                     // SWI
 _pabt:  .word __pabt                    // program abort
 _dabt:  .word __dabt                    // data abort
+
+#if (scmRTOS_CONTEXT_SWITCH_SCHEME == 0) || defined(GCC_IRQ_PATCH_REQUIRED)
+_irq:   .word IRQHandler
+#else
 _irq:   .word __irq                     // IRQ
+#endif
+
 _fiq:   .word __fiq                     // FIQ
 
 __undf: b     .                         // undefined
@@ -194,6 +211,22 @@ PLL_Loop:
         ldr   r10,=sysInit
         mov   lr,pc
         bx    r10                       // enter sysInit()
+
+// Call constructors
+//-----------------------------------------------------------------------------
+//     Call C++ constructors
+        ldr     r0, =__ctors_start
+        ldr     r1, =__ctors_end
+ctor_loop:
+        cmp     r0, r1
+        beq     ctor_end
+        ldr     r2, [r0], #4
+        stmfd   sp!, {r0,r1}
+        mov     lr, pc
+        bx      r2                      // some constructors can be in thumb mode
+        ldmfd   sp!, {r0,r1}
+        b       ctor_loop
+ctor_end:
 
 // Call main program: main(0)
 // --------------------------
