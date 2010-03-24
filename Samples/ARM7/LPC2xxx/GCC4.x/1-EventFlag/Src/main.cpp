@@ -45,6 +45,10 @@
 //*     ARM port by Sergey A. Borshch, Copyright (c) 2006-2010
 #include <stdint.h>
 #include <scmRTOS.h>
+
+
+void halInit(void);
+
 //---------------------------------------------------------------------------
 //
 //      Process types
@@ -66,18 +70,25 @@ OS::TEventFlag Timer_Ovf;
 //---------------------------------------------------------------------------
 int main()
 {
-    FIO0DIR |= (1<<2) | (1<<7) | (1<<16);
-    FIO0CLR = (1<<2) | (1<<7);
-    FIO0SET = (1<<16);
+    halInit();
+   //enable interrupts (both IRQ and FIQ) 
+   asm volatile ("mrs r3, cpsr       \n\t"                          
+                 "bic r3, r3, #0xC0  \n\t"
+                 "msr cpsr, r3       \n\t"
+                 :
+                 :
+                 : "r3" );
 
     while(1)
     {
         volatile int i;
-        FIO0SET = (1<<2);
         for(i=0; i<2000; i++) ;
-        FIO0CLR = (1<<2);
+        FIO0SET = (1<<6);
         for(i=0; i<2000; i++) ;
+        FIO0CLR = (1<<6);
     }
+    
+
     OS::Run();
 }
 //---------------------------------------------------------------------------
@@ -100,7 +111,7 @@ namespace OS
         for(;;)
         {
             Timer_Ovf.Wait();
-            //AT91C_BASE_PIOA->PIO_CODR = (1 << 0);
+            FIO0CLR = (1<<2);
         }
     }
 //---------------------------------------------------------------------------
@@ -119,15 +130,46 @@ void OS::SystemTimerUserHook() { }
 //---------------------------------------------------------------------------
 void OS::IdleProcessUserHook() { }
 //---------------------------------------------------------------------------
+void Timer_ISR() __attribute__((interrupt("IRQ")));
+
 OS_INTERRUPT void Timer_ISR()
 {
-    OS::TISRW ISRW;
-    //AT91C_BASE_TCB->TCB_TC0.TC_SR;   // read to clear int flag
+    static int st = 0;
+    //OS::TISRW ISRW;
+    T1IR = T1IR;                    // clear int flag
+    //Timer_Ovf.SignalISR();
 
-    //AT91C_BASE_PIOA->PIO_SODR = (1 << 0);
-    Timer_Ovf.SignalISR();
+    FIO0SET = (1<<2);
+    if(st)
+        FIO0SET = (1<<3);
+    else
+        FIO0CLR = (1<<3);
+    st = ~st;
 
-    //AT91C_BASE_AIC->AIC_EOICR = 0;
 }
 //-----------------------------------------------------------------------------
+
+
+void halInit(void)
+{
+    FIO0DIR |= 0xFC | (1<<16);
+    FIO0CLR = 0xFC;
+    //FIO0SET = (1<<16);
+
+// ***************************************************************************
+// ** TIMER1
+// ***************************************************************************
+//          EventFlag test timer
+    T1IR = 0x000000FF;                      // clear int requests
+    T1TCR = (1<<1);
+    T1PR = 0;
+    T1MR0 = PCLK / 350;                      // int at 10Hz
+    T1MCR = (1<<1) | (1<<0);                // MR0INT = 1, MR0RES = 1
+    T1TCR = (1<<0);                         // CE = 1, enable timer
+
+    // Set periodical timer interrupt with highest priority
+    VICVectAddr5 = (dword)Timer_ISR;
+    VICVectCntl5 = 0x20 | VIC_TIMER1;
+    VICIntEnable |= (1UL<<VIC_TIMER1);
+}
 
