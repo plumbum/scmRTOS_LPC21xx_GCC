@@ -5,7 +5,7 @@
 //  Generates appropriate mappings for objects in memory
 //
 //  Target mcu: AT91SAM7 (Atmel)
-//  Code location: Internal flash 
+//  Code location: Internal ram
 //
 //
 //  $Revision: 202 $
@@ -15,15 +15,16 @@
 */
 
 ENTRY(_start)
-IRQ_STACK_SIZE = 0x400;
-SYS_STACK_SIZE = 0x0;    /* actualy not used after OS:Start() */
 
+STACK_SIZE = 0x400;
+
+/* memory layout */
 /* memory layout */
 MEMORY
 {
-  REMAP (rx)   : ORIGIN = 0x00000000, LENGTH = 0x00004000   /* the same size ar RAM */
-  ROM (rx)     : ORIGIN = 0x00100000, LENGTH = 0x00008000   /* any SAM7 has at least 32K ROM */
-  RAM (rw)     : ORIGIN = 0x00200000, LENGTH = 0x00004000   /* any SAM7 has at least 4K RAM */
+  REMAP (rx)   : ORIGIN = 0x00000000, LENGTH = 0x00002000   /* the same size ar RAM */
+  ROM (rx)     : ORIGIN = 0x00000000, LENGTH = 0x00008000   /* any SAM7 has at least 32K ROM */
+  RAM (rw)     : ORIGIN = 0x40000000, LENGTH = 0x00002000   /* any SAM7 has at least 4K RAM */
 }
 
 SECTIONS
@@ -31,11 +32,12 @@ SECTIONS
   .vectors :
   {
     KEEP(*(.vectors))
-  } > REMAP AT > ROM    /* link vectors to remapped area, but place to ROM area */
+  } > REMAP AT > RAM    /* link vectors to remapped area, but place to RAM area */
 
   /* first section is .text which is used for code */
   .text :
   {
+
     __ctors_start = .;
     *(.ctors)
      __ctors_end = .;
@@ -53,7 +55,7 @@ SECTIONS
 
     *(.glue_7)
     *(.glue_7t)
-  } > ROM
+  } > RAM
 
   . = ALIGN(4);
   _etext = .;
@@ -67,8 +69,9 @@ SECTIONS
 
     _edata = . ;
     _data_image = LOADADDR(.data) ;
+
     PROVIDE (edata = .);
-  } > RAM AT > ROM
+  } > RAM
 
   . = ALIGN(4);
 
@@ -95,19 +98,11 @@ SECTIONS
      PROVIDE (__heap_start = .) ;
   } > RAM
 
-  .stack :
+  .stack ALIGN(256) :
   {
     . = ALIGN(4);
-    . += IRQ_STACK_SIZE;
-    PROVIDE (__stack_irq = .);
-    . += SYS_STACK_SIZE;
-    PROVIDE (__stack_sys = .);
-    /*  allocate stacks if needed */
-    PROVIDE (__stack_fiq = .);
-    PROVIDE (__stack_und = .);
-    PROVIDE (__stack_abort = .);
-    PROVIDE (__stack_svc = .);
-    
+    . += STACK_SIZE;
+    PROVIDE (_stack = .);
   } > RAM
 
   _end = . ;
