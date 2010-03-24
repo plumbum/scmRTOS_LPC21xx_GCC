@@ -29,11 +29,14 @@ SECTIONS
   .vectors :
   {
     KEEP(*(.vectors))
-  }  > ROM    /* link vectors to remapped area, but place to ROM area */
+  }  > ROM
 
   /* first section is .text which is used for code */
   .text :
   {
+    *crt0.o (.text)            /* Startup code */
+    *(.text*)           /* code */
+
     __ctors_start = .;
     *(.ctors)
      __ctors_end = .;
@@ -44,8 +47,6 @@ SECTIONS
     KEEP(SORT(*)(.dtors))
 
     . = ALIGN(4);
-
-    *(.text*)           /* code */
 
     *(.rodata*)         /* read-only data (constants) */
 
@@ -66,7 +67,7 @@ SECTIONS
     _edata = . ;
     _data_image = LOADADDR(.data) ;
     PROVIDE (edata = .);
-  } > ROM
+  } > RAM AT > ROM
 
   . = ALIGN(4);
 
@@ -95,7 +96,6 @@ SECTIONS
 
   .stack ALIGN(256) :
   {
-    . = ALIGN(4);
     . += STACK_SIZE;
     PROVIDE (_stack = .);
   } > RAM
