@@ -72,22 +72,25 @@ int main()
 {
     halInit();
    //enable interrupts (both IRQ and FIQ) 
+#if 0
    asm volatile ("mrs r3, cpsr       \n\t"                          
                  "bic r3, r3, #0xC0  \n\t"
                  "msr cpsr, r3       \n\t"
                  :
                  :
                  : "r3" );
+#endif
 
+#if 0
     while(1)
     {
         volatile int i;
-        for(i=0; i<2000; i++) ;
+        for(i=0; i<1000; i++) ;
         FIO0SET = (1<<6);
-        for(i=0; i<2000; i++) ;
+        for(i=0; i<1000; i++) ;
         FIO0CLR = (1<<6);
     }
-    
+#endif
 
     OS::Run();
 }
@@ -97,10 +100,10 @@ namespace OS
     template<>
     OS_PROCESS void TProc1::Exec()
     {
+        FIO0SET = (1<<4);
         for(;;)
         {
             Sleep(2);
-
             ef.Wait();
         }
     }
@@ -126,34 +129,33 @@ namespace OS
     }
 }   // namespace OS
 //---------------------------------------------------------------------------
-void OS::SystemTimerUserHook() { }
+void OS::SystemTimerUserHook() { FIO0SET = (1<<4); }
 //---------------------------------------------------------------------------
 void OS::IdleProcessUserHook() { }
 //---------------------------------------------------------------------------
-void Timer_ISR() __attribute__((interrupt("IRQ")));
+//extern "C" void Timer_ISR() __attribute__((interrupt("IRQ")));
 
 OS_INTERRUPT void Timer_ISR()
 {
-    static int st = 0;
-    //OS::TISRW ISRW;
-    T1IR = T1IR;                    // clear int flag
-    //Timer_Ovf.SignalISR();
+    OS::TISRW ISRW;
+    T1IR = 0xFF; // T1IR;                    // clear int flag
 
     FIO0SET = (1<<2);
+    static int st = 0;
     if(st)
         FIO0SET = (1<<3);
     else
         FIO0CLR = (1<<3);
     st = ~st;
-
+    Timer_Ovf.SignalISR();
 }
 //-----------------------------------------------------------------------------
-
 
 void halInit(void)
 {
     FIO0DIR |= 0xFC | (1<<16);
     FIO0CLR = 0xFC;
+
     //FIO0SET = (1<<16);
 
 // ***************************************************************************
@@ -163,13 +165,18 @@ void halInit(void)
     T1IR = 0x000000FF;                      // clear int requests
     T1TCR = (1<<1);
     T1PR = 0;
-    T1MR0 = PCLK / 350;                      // int at 10Hz
-    T1MCR = (1<<1) | (1<<0);                // MR0INT = 1, MR0RES = 1
+    T1MR0 = PCLK / 350;                    // int at 10Hz
+    T1MCR = TMCR_MR0_I | TMCR_MR0_R;        // MR0INT = 1, MR0RES = 1
     T1TCR = (1<<0);                         // CE = 1, enable timer
 
     // Set periodical timer interrupt with highest priority
-    VICVectAddr5 = (dword)Timer_ISR;
-    VICVectCntl5 = 0x20 | VIC_TIMER1;
+    VICVectAddr0 = (dword)Timer_ISR;
+    VICVectCntl0 = 0x20 | VIC_TIMER1;
     VICIntEnable |= (1UL<<VIC_TIMER1);
+    VICVectAddr = 0;    // Reset VIC logic
+
+#if scmRTOS_CONTEXT_SWITCH_SCHEME == 1
+    FIO0SET = (1<<7);
+#endif
 }
 
