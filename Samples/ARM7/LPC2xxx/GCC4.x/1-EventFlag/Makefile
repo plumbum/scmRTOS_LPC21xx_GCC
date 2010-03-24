@@ -17,6 +17,9 @@ CHIP = LPC2103
 
 PROJECT = 1-EventFlag
 
+#RUN_MODE = RAM_RUN
+RUN_MODE = ROM_RUN
+
 OPTIMIZE = -Os
 
 ##############################################################################################
@@ -45,6 +48,7 @@ SRC_ARM_CPP = OS_Kernel.cpp
 SRC_ARM_CPP += OS_Services.cpp
 SRC_ARM_CPP += usrlib.cpp
 SRC_ARM_CPP += OS_Target_cpp.cpp
+SRC_ARM_CPP += system.cpp
 #       Application sources
 SRC_ARM_CPP += main.cpp
 ############################
@@ -59,12 +63,17 @@ SRC_ARM_ASM += crt0.s
 LIBS =
 
 ##############################################################################################
+
+ifeq ($(RUN_MODE),RAM_RUN)
 LD_SCRIPT= ./Config/scmRTOS_LPC2103_ram.ld
-#LD_SCRIPT= ./Config/scmRTOS_LPC2103_rom.ld
+else
+LD_SCRIPT= ./Config/scmRTOS_LPC2103_rom.ld
+endif
+
 
 ##############################################################################################
 # predefined symbols for all sources
-DEFS =
+DEFS = -D$(RUN_MODE)
 # predefined symbols for .cpp sources
 CPP_DEFS = 
 # predefined symbols for .s sources

@@ -1,6 +1,7 @@
 #include "device.h"
 
         .global main                    // int main(void)
+        .global sysInit
 
         .global _etext                  // -> .data initial values in ROM
         .global _data                   // -> .data area in RAM
@@ -188,6 +189,11 @@ PLL_Loop:
 2:      cmp   r1,r2                     // check if data to clear
         strlo r0,[r1],#4                // clear 4 bytes
         blo   2b                        // loop until done
+
+// Call sysInit()
+        ldr   r10,=sysInit
+        mov   lr,pc
+        bx    r10                       // enter sysInit()
 
 // Call main program: main(0)
 // --------------------------

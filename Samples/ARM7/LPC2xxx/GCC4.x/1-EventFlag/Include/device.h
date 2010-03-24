@@ -18,16 +18,20 @@
 #ifndef __ASSEMBLER__
 #include <inttypes.h>
 
+
 // declare functions and values from crt0.S & the linker control file
-extern void reset(void);
+extern "C" void reset(void);
 // extern void exit(void);
-extern void abort(void);
+extern "C" void abort(void);
 // maybe add interrupt vector addresses
 
 #endif /* __ASSEMBLER__ */
 
 #define USE_FIO 1
 #define USE_PLL 1
+
+
+#define RTOS_TICK_RATE 1000 // Hz
 
 
 #define VIC_SW 1
