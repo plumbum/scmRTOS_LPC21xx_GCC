@@ -48,7 +48,7 @@
 #ifndef TARGET_LPC2XXX_H__
 #define TARGET_LPC2XXX_H__
 
-#ifdef __ASSEMBLER__
+#ifndef __ASSEMBLER__
 
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1 && !defined(GCC_IRQ_PATCH_REQUIRED)
 #define OS_INTERRUPT   __attribute__((interrupt("IRQ")))
@@ -59,15 +59,13 @@
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1
 INLINE inline void RaiseContextSwitch()
 {
-    do {
-        VICSoftInt = (1<<CONTEXT_SWITCH_INT);
-    } while (0) // set flag and enable interrupt
+    VICSoftInt = (1<<CONTEXT_SWITCH_INT); // set flag and enable interrupt
 }
 #endif
 
 INLINE inline void IRQ_DONE()
 {
-   do { VICVectAddr = 0; } while(0)    // Reset VIC logic
+   VICVectAddr = 0;    // Reset VIC logic
 }
 
 #define SYSTEM_TIMER_HANDLER()  \
@@ -81,21 +79,24 @@ INLINE inline void IRQ_DONE()
 #else   // __ASSEMBLER__
 
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 0
-        .macro  IRQ_SWITCH  ; call interrupt handler
+        /* call interrupt handler */
+        .macro  IRQ_SWITCH
         LDR     R1,=VICVectAddr
         MOV     LR, PC
         LDR     PC,[R1]
         .endm
 #else   // scmRTOS_CONTEXT_SWITCH_SCHEME == 1
-        .macro  IRQ_SWITCH  ; call interrupt handler
+        /* call interrupt handler */
+        .macro  IRQ_SWITCH
         LDR     PC, VICVectAddr
         .endm
 
-        .macro  IRQ_DONE    ; reset interrupt controller
+        /* reset interrupt controller */
+        .macro  IRQ_DONE
         LDR     R1, =VICVectAddr
         MOV     R2, #(1 << CONTEXT_SWITCH_INT)
-        STR     R2, [R1, #VICSoftIntClear - VICVectAddr]        ; clear soft int request
-        STR     R1, [R1]                                        ; reset VIC
+        STR     R2, [R1, #(VICSoftIntClear - VICVectAddr)]      /* clear soft int request */
+        STR     R1, [R1]                                        /* reset VIC */
         .endm
 #endif  // scmRTOS_CONTEXT_SWITCH_SCHEME
 
