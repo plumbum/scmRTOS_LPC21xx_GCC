@@ -43,6 +43,7 @@
 //*
 //******************************************************************************
 //*     ARM port by Sergey A. Borshch, Copyright (c) 2006-2010
+//*     LPC2xxx adapt by Ivan A-R
 
 #ifndef  scmRTOS_CONFIG_H
 #define  scmRTOS_CONFIG_H

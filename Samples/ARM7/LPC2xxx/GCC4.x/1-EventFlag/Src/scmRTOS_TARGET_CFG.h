@@ -51,21 +51,22 @@
 
 //------------------------------------------------------------------------------
 //
-//       Context switching interrupt coosing
+//       Context switching interrupt choosing
 //
 //
-#define CONTEXT_SWITCH_INT      AT91C_ID_UDP
+#define CONTEXT_SWITCH_INT      VIC_SW
 
 //------------------------------------------------------------------------------
 //
 //       System Timer stuff
 //
-//  PIT used as System timer
+//  TIMER3 used as System timer
 //
-#define SYSTEM_TIMER_INT        AT91C_ID_SYS
+#define SYSTEM_TIMER_INT        VIC_TIMER3
 
-#define LOCK_SYSTEM_TIMER()     do { AT91C_BASE_PITC->PITC_PIMR &= ~AT91C_PITC_PITIEN; } while(0)
-#define UNLOCK_SYSTEM_TIMER()   do { AT91C_BASE_PITC->PITC_PIMR |= AT91C_PITC_PITIEN; } while(0)
+#define RESET_SYSTIMER_INT()    do { T3IR = T3IR; } while(0)
+#define LOCK_SYSTEM_TIMER()     do { T3MCR &= ~TMCR_MR0_I; } while(0)
+#define UNLOCK_SYSTEM_TIMER()   do { T3MCR |= TMCR_MR0_I; } while(0)
 
 //-----------------------------------------------------------------------------
 

@@ -13,7 +13,7 @@ OBJCOPY = $(TARGET)objcopy
 OBJDUMP = $(TARGET)objdump 
 SIZE = $(TARGET)size 
 
-CHIP = AT91SAM7S64
+CHIP = LPC2103
 
 PROJECT = 1-EventFlag
 
@@ -23,11 +23,12 @@ OPTIMIZE = -Os
 # OS sources directories
 scmRTOS_DIRS = ../scmRTOS/Common ../scmRTOS/Ports/ARM7/GCC4.x
 # Application sources directories
-SRC_DIRS = ./Src
+SRC_DIRS = ./Src ./Startup
 # Directories to search includes
-INC_DIRS = 
+INC_DIRS = ./Include
 # Directories to search libraries
 LIB_DIRS =
+
 ##############################################################################################
 # THUMB sources
 #
@@ -36,6 +37,7 @@ LIB_DIRS =
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #SRC_THUMB_CPP = ./Src/main.cpp
 #SRC_THUMB_ASM = 
+
 ############################
 #  ARM .cpp sources
 #       OS sources
@@ -50,13 +52,16 @@ SRC_ARM_CPP += main.cpp
 #       OS sources
 SRC_ARM_ASM = OS_Target_asm.s
 #       Application sources
-SRC_ARM_ASM += crt.s
+SRC_ARM_ASM += crt0.s
+
 ############################
 # libraries
 LIBS =
+
 ##############################################################################################
-LD_SCRIPT= ./Config/scmRTOS_SAM7_ram.ld
-#LD_SCRIPT= ./Config/scmRTOS_SAM7_rom.ld
+LD_SCRIPT= ./Config/scmRTOS_LPC2103_ram.ld
+#LD_SCRIPT= ./Config/scmRTOS_LPC2103_rom.ld
+
 ##############################################################################################
 # predefined symbols for all sources
 DEFS =
@@ -125,7 +130,7 @@ CPP_FLAGS += -fno-exceptions -fno-rtti
 CPP_FLAGS += -Wall -Wextra -Wundef -Wcast-align
 CPP_FLAGS += -Wa,-ahlmsdc=$(LSTDIR)/$(notdir $(<:.cpp=.lst)) -fverbose-asm
 CPP_FLAGS += -ffunction-sections -fdata-sections    # to remove dead code, if any, at link time
-CPP_FLAGS += -Winline                               # generate warning if inlinign fails
+CPP_FLAGS += -Winline -finline-limit=40             # generate warning if inlinign fails
 CPP_FLAGS += -funsigned-bitfields -fshort-enums	    # actually not important for scmRTOS
 
 
@@ -138,16 +143,27 @@ LD_FLAGS += $(LIBDIR)
 LD_FLAGS += -Wl,--gc-sections
 
 
+LPC21ISP = utils/lpc21isp
+LPC21ISP_PORT = /dev/ttyUSB0
+LPC21ISP_BAUD = 115200
+LPC21ISP_XTAL = 14746
+#LPC21ISP_FLASHFILE = $(TARGET).hex
+# verbose output:
+## LPC21ISP_DEBUG = -debug
+# enter bootloader via RS232 DTR/RTS (only if hardware supports this
+# feature - see Philips AppNote):
+LPC21ISP_CONTROL = -control
+
 #
 # makefile rules
 #
 .SILENT :
-.PHONY : all clean
+.PHONY : all clean tags load
 all: directories $(OBJS) $(ELF)  $(LSS) size $(HEX) $(BIN)
 #all: directories $(OBJS) $(ELF) $(LSS) size
 
 #all objects depends on makefile
-$(OBJS): makefile
+$(OBJS): Makefile
 
 $(OBJS_ARM_CPP) : $(OBJDIR)/%.o : %.cpp
 	@echo Compiling: $<
@@ -182,10 +198,24 @@ size:
 	$(SIZE) -B -t $(ELF)
 	$(CC) --version
 
+
+$(LPC21ISP):
+	@make -C utils/
+
+# Program the device.  
+load: $(HEX) $(LPC21ISP)
+	@echo
+	@echo Upload firmware
+	$(LPC21ISP) $(LPC21ISP_CONTROL) $(LPC21ISP_DEBUG) $< $(LPC21ISP_PORT) $(LPC21ISP_BAUD) $(LPC21ISP_XTAL)
+
+tags:
+	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q . ../scmRTOS
+
 directories:
 	mkdir -p $(EXEDIR) $(OBJDIR) $(DEPDIR) $(LSTDIR)
 clean:
 	rm -rf $(OUTDIR)
+	rm -rf tags
 
     
 # if TOOLSET variable set,

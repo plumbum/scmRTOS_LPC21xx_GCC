@@ -88,7 +88,7 @@ namespace OS
         for(;;)
         {
             Timer_Ovf.Wait();
-            AT91C_BASE_PIOA->PIO_CODR = (1 << 0);
+            //AT91C_BASE_PIOA->PIO_CODR = (1 << 0);
         }
     }
 //---------------------------------------------------------------------------
@@ -110,30 +110,17 @@ void OS::IdleProcessUserHook() { }
 OS_INTERRUPT void Timer_ISR()
 {
     OS::TISRW ISRW;
-    AT91C_BASE_TCB->TCB_TC0.TC_SR;   // read to clear int flag
+    //AT91C_BASE_TCB->TCB_TC0.TC_SR;   // read to clear int flag
 
-    AT91C_BASE_PIOA->PIO_SODR = (1 << 0);
+    //AT91C_BASE_PIOA->PIO_SODR = (1 << 0);
     Timer_Ovf.SignalISR();
 
-    AT91C_BASE_AIC->AIC_EOICR = 0;
+    //AT91C_BASE_AIC->AIC_EOICR = 0;
 }
 //-----------------------------------------------------------------------------
 
-#define SLCK            32768L      // something about :-(
-#define MAINCLK         18432000LL
-#define PLLMUL          26
-#define PLLDIV          5
-#define PLLCLK          ((MAINCLK * PLLMUL) / PLLDIV)
-#define MCK             (PLLCLK / 2)
-#define PCK             SLCK
 
-#define RTOS_TICK_RATE  1000        // Hz
-#define TEST_TIMER_RATE 3500        // Hz
-
-#ifndef AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE     // ioAT91SAM7Sxx.h v4.30A patch
-#define AT91C_AIC_SRCTYPE_INT_POSITIVE_EDGE AT91C_AIC_SRCTYPE_INT_EDGE_TRIGGERED
-#endif
-
+#if 0
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1
 extern "C" void ContextSwitcher_ISR();
 #endif
@@ -207,3 +194,6 @@ extern "C" int __low_level_init(void)
 
     return 1;
 }
+
+#endif 
+
