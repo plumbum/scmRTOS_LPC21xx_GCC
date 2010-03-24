@@ -34,6 +34,13 @@
 
 #define END_OF_RAM	0x40002000
 
+/* Interrupts num */
+#define VIC_SW 1
+#define VIC_TIMER0 4
+#define VIC_TIMER1 5
+#define VIC_TIMER2 26
+#define VIC_TIMER3 27
+
 #ifndef __ASSEMBLER__
 
 #include "LPC2103bits.h"

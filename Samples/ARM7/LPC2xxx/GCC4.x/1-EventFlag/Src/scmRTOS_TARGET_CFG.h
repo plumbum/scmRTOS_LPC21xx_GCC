@@ -60,13 +60,13 @@
 //
 //       System Timer stuff
 //
-//  TIMER3 used as System timer
+//  TIMER0 used as System timer
 //
-#define SYSTEM_TIMER_INT        VIC_TIMER3
+#define SYSTEM_TIMER_INT        VIC_TIMER0
 
-#define RESET_SYSTIMER_INT()    do { T3IR = T3IR; } while(0)
-#define LOCK_SYSTEM_TIMER()     do { T3MCR &= ~TMCR_MR0_I; } while(0)
-#define UNLOCK_SYSTEM_TIMER()   do { T3MCR |= TMCR_MR0_I; } while(0)
+#define RESET_SYSTIMER_INT()    do { T0IR = T0IR; } while(0)
+#define LOCK_SYSTEM_TIMER()     do { T0MCR &= ~TMCR_MR0_I; } while(0)
+#define UNLOCK_SYSTEM_TIMER()   do { T0MCR |= TMCR_MR0_I; } while(0)
 
 //-----------------------------------------------------------------------------
 

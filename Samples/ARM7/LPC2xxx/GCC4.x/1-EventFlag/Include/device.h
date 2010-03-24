@@ -34,9 +34,6 @@ extern "C" void abort(void);
 #define RTOS_TICK_RATE 1000 // Hz
 
 
-#define VIC_SW 1
-#define VIC_TIMER3 27
-
 
 // some handy DEFINES
 #ifndef FALSE
