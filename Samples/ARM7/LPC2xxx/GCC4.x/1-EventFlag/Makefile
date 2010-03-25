@@ -152,7 +152,7 @@ LD_FLAGS += $(LIBDIR)
 LD_FLAGS += -Wl,--gc-sections
 
 
-LPC21ISP = utils/lpc21isp
+LPC21ISP = ../utils/lpc21isp
 LPC21ISP_PORT = /dev/ttyUSB0
 LPC21ISP_BAUD = 115200
 LPC21ISP_XTAL = 14746
@@ -210,7 +210,7 @@ size:
 
 
 $(LPC21ISP):
-	@make -C utils/
+	@make -C ../utils/
 
 # Program the device.  
 load: $(HEX) $(LPC21ISP)
