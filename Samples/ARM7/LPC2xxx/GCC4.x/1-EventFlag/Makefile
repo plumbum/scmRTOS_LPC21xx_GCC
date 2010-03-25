@@ -205,6 +205,7 @@ $(BIN): $(ELF)
 
 size:
 	$(SIZE) -B -t $(ELF)
+	$(SIZE) -A -t $(ELF)
 	$(CC) --version
 
 

@@ -111,7 +111,7 @@ typedef word TTimeout;
 //    interrupt. See documentation fo details.
 //
 //
-#define  scmRTOS_CONTEXT_SWITCH_SCHEME      0
+#define  scmRTOS_CONTEXT_SWITCH_SCHEME      1
 
 //-----------------------------------------------------------------------------
 //
