@@ -26,10 +26,12 @@ MEMORY
 
 SECTIONS
 {
+  /*
   .vectors :
   {
     KEEP(*(.vectors))
   }  > ROM
+  */
 
   /* first section is .text which is used for code */
   .text :
@@ -38,6 +40,7 @@ SECTIONS
     *(.text*)           /* code */
 
     __ctors_start = .;
+    *(.init_array)
     *(.ctors)
      __ctors_end = .;
      __dtors_start = .;
@@ -45,6 +48,7 @@ SECTIONS
      __dtors_end = .;
     KEEP(SORT(*)(.ctors))
     KEEP(SORT(*)(.dtors))
+    KEEP(SORT(*)(.init_array))
 
     . = ALIGN(4);
 
